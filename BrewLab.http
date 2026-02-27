@@ -1,0 +1,6 @@
+@BrewLab_HostAddress = http://localhost:5067
+
+GET {{BrewLab_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
