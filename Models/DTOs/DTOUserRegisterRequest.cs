@@ -1,6 +1,6 @@
-﻿namespace BrewLab.Models.User
+﻿namespace BrewLab.Models.DTOs
 {
-    public class UserRegisterModel
+    public class DTOUserRegisterRequest
     {
         public required string Name { get; set; }
         public required string Email { get; set; }

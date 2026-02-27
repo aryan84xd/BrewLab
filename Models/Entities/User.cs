@@ -1,6 +1,6 @@
-﻿namespace BrewLab.Data.Dtos
+﻿namespace BrewLab.Models.Entities
 {
-    public class UserDto
+    public class User
     {
         public Guid Id { get; set; } = Guid.NewGuid();  // auto-generate
         public string Name { get; set; }
