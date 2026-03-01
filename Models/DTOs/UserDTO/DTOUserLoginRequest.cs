@@ -1,4 +1,4 @@
-﻿namespace BrewLab.Models.DTOs
+﻿namespace BrewLab.Models.DTOs.UserDTO
 {
     public class DTOUserLoginRequest
     {

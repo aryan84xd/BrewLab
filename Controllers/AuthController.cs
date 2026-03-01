@@ -1,5 +1,5 @@
 ﻿using BrewLab.Helpers;
-using BrewLab.Models.DTOs;
+using BrewLab.Models.DTOs.UserDTO;
 using BrewLab.Models.Entities;
 using BrewLab.Options;
 using Microsoft.AspNetCore.Authorization;
