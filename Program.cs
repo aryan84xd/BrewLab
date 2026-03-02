@@ -4,15 +4,20 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
-
+using Npgsql.EntityFrameworkCore.PostgreSQL;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Bind Jwt settings
 builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("Jwt"));
 
-// EF Core InMemory (swap to SQL Server if needed)
-builder.Services.AddDbContext<AppDbContext>(opt => opt.UseInMemoryDatabase("AuthDb"));
+//// EF Core InMemory (swap to SQL Server if needed)
+//builder.Services.AddDbContext<AppDbContext>(options =>
+//    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+// Use EF Core InMemory database
+builder.Services.AddDbContext<AppDbContext>(options =>
+    options.UseInMemoryDatabase("BrewLabDb"));
 
 builder.Services.AddControllers();
 
