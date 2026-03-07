@@ -16,20 +16,21 @@ namespace BrewLab.Controllers
 
 
         [HttpGet("{id}")]
-        public async Task<ActionResult<IEnumerable<DTOExperiment>>> GetCoffeeExperiments(Guid coffeeId)
+        public async Task<ActionResult<IEnumerable<DTOExperiment>>> GetCoffeeExperiments(Guid id)
         {
             var user = await GetCurrentUserAsync();
             if (user == null)
                 return Unauthorized();
             var coffeeExists = await _db.Coffees
-            .AnyAsync(c => c.Id == coffeeId && c.UserId == user.Id);
+            .AnyAsync(c => c.Id == id && c.UserId == user.Id);
             if (!coffeeExists)
                 return NotFound("Coffee not found for this user.");
 
             var experiments = await _db.Experiments
-        .Where(e => e.CoffeeId == coffeeId && e.UserId == user.Id)
+        .Where(e => e.CoffeeId == id && e.UserId == user.Id)
         .Select(e => new DTOExperiment
         {
+            CoffeeId=e.CoffeeId,
             Date = e.Date,
             Acidity = e.Acidity,
             Aroma = e.Aroma,
@@ -59,6 +60,7 @@ namespace BrewLab.Controllers
                 return NotFound("Coffee not found for the user.");
             var experiment = new Experiment {
                 Coffee = coffee,
+                UserId=user.Id,
                 CoffeeId = experimentDto.CoffeeId,
                 BrewMethod = experimentDto.BrewMethod,
                 CoffeeWeight = experimentDto.CoffeeWeight,
@@ -75,7 +77,7 @@ namespace BrewLab.Controllers
             _db.Experiments.Add(experiment);
             await _db.SaveChangesAsync();
 
-            return CreatedAtAction("GetCoffee", new { id = coffee.Id }, experimentDto.Date);
+            return Ok(experiment);
         }
 
     }

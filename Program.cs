@@ -12,12 +12,12 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("Jwt"));
 
 //// EF Core InMemory (swap to SQL Server if needed)
-//builder.Services.AddDbContext<AppDbContext>(options =>
-//    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
-
-// Use EF Core InMemory database
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseInMemoryDatabase("BrewLabDb"));
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+//// Use EF Core InMemory database
+//builder.Services.AddDbContext<AppDbContext>(options =>
+//    options.UseInMemoryDatabase("BrewLabDb"));
 
 builder.Services.AddControllers();
 

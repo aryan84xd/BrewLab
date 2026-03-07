@@ -11,8 +11,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace BrewLab.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260302101309_InitialCreatev3")]
-    partial class InitialCreatev3
+    [Migration("20260307161548_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
