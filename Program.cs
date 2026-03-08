@@ -8,6 +8,9 @@ using Npgsql.EntityFrameworkCore.PostgreSQL;
 
 var builder = WebApplication.CreateBuilder(args);
 
+var port = Environment.GetEnvironmentVariable("PORT") ?? "5000";
+builder.WebHost.UseUrls($"http://*:{port}");
+
 // Bind Jwt settings
 builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("Jwt"));
 
