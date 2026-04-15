@@ -32,7 +32,7 @@ builder.Services.AddCors(options =>
             .WithOrigins(
                 "http://localhost:5173",
                 "http://localhost:4173",
-                "https://your-app.vercel.app"
+                "https://brew-lab-frontend.vercel.app"
             )
             .AllowAnyHeader()
             .AllowAnyMethod();
