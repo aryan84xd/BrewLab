@@ -1,86 +1,69 @@
-﻿using BrewLab.Models.DTOs.CoffeeDTO;
-using BrewLab.Models.DTOs.ExperimentDTO;
-using BrewLab.Models.Entities;
+using BrewLab.Models.Requests;
+using BrewLab.Models.Responses;
+using BrewLab.Services;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 
 namespace BrewLab.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class ExperimentController : BaseApiController
+    [Authorize]
+    public class ExperimentController : ControllerBase
     {
-        public ExperimentController(AppDbContext db) : base(db) { }
+        private readonly IExperimentService _experimentService;
 
-
-        [HttpGet("{id}")]
-        public async Task<ActionResult<IEnumerable<DTOExperiment>>> GetCoffeeExperiments(Guid id)
+        public ExperimentController(IExperimentService experimentService)
         {
-            var user = await GetCurrentUserAsync();
-            if (user == null)
+            _experimentService = experimentService;
+        }
+
+        private Guid? GetCurrentUserId()
+        {
+            var userId = User.Claims.FirstOrDefault(c => c.Type == "sub")?.Value
+                         ?? User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
+
+            if (userId is null || !Guid.TryParse(userId, out var id))
+                return null;
+
+            return id;
+        }
+
+        [HttpGet("{coffeeId}")]
+        public async Task<ActionResult<IEnumerable<ExperimentResponse>>> GetCoffeeExperiments(Guid coffeeId)
+        {
+            var userId = GetCurrentUserId();
+            if (userId is null)
                 return Unauthorized();
-            var coffeeExists = await _db.Coffees
-            .AnyAsync(c => c.Id == id && c.UserId == user.Id);
-            if (!coffeeExists)
-                return NotFound("Coffee not found for this user.");
 
-            var experiments = await _db.Experiments
-        .Where(e => e.CoffeeId == id && e.UserId == user.Id)
-        .Select(e => new DTOExperiment
-        {
-            CoffeeId=e.CoffeeId,
-            Date = e.Date,
-            Acidity = e.Acidity,
-            Aroma = e.Aroma,
-            Body = e.Body,
-            BrewMethod = e.BrewMethod,
-            BrewTime = e.BrewTime,
-            CoffeeWeight = e.CoffeeWeight,
-            WaterWeight = e.WaterWeight,
-            Overall = e.Overall,
-            Remark = e.Remark
-        })
-        .ToListAsync();
-
-            return Ok(experiments);
-
-
+            try
+            {
+                var experiments = await _experimentService.GetByCoffeeIdAsync(coffeeId, userId.Value);
+                return Ok(experiments);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return NotFound(ex.Message);
+            }
         }
 
         [HttpPost]
-        public async Task<ActionResult<DTOExperiment>> PostExperiment(DTOExperiment experimentDto)
+        public async Task<ActionResult<ExperimentResponse>> PostExperiment(CreateExperimentRequest request)
         {
-            var user = await GetCurrentUserAsync();
-            if (user == null)
+            var userId = GetCurrentUserId();
+            if (userId is null)
                 return Unauthorized();
-            var coffee = await _db.Coffees.FirstOrDefaultAsync(c => c.Id == experimentDto.CoffeeId && c.UserId == user.Id);
-            if (coffee == null)
-                return NotFound("Coffee not found for the user.");
-            var experiment = new Experiment {
-                Coffee = coffee,
-                UserId=user.Id,
-                CoffeeId = experimentDto.CoffeeId,
-                BrewMethod = experimentDto.BrewMethod,
-                CoffeeWeight = experimentDto.CoffeeWeight,
-                WaterWeight = experimentDto.WaterWeight,
-                BrewTime = experimentDto.BrewTime,
-                Remark = experimentDto.Remark,
-                Aroma = experimentDto.Aroma,
-                Acidity = experimentDto.Acidity,
-                Body = experimentDto.Body,
-                Overall = experimentDto.Overall
-            };
 
-
-            _db.Experiments.Add(experiment);
-            await _db.SaveChangesAsync();
-
-            return Ok(experiment);
+            try
+            {
+                var experiment = await _experimentService.CreateAsync(request, userId.Value);
+                return Ok(experiment);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return NotFound(ex.Message);
+            }
         }
-
     }
-
-
 }

@@ -1,164 +1,69 @@
-﻿using BrewLab.Models.Entities;
-using BrewLab.Options;
+using BrewLab.Models.Requests;
+using BrewLab.Models.Responses;
+using BrewLab.Services;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Security.Claims;
-using System.Threading.Tasks;
-using BrewLab.Models.DTOs.CoffeeDTO;
 
 namespace BrewLab.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class CoffeesController : BaseApiController
+    [Authorize]
+    public class CoffeesController : ControllerBase
     {
-       
+        private readonly ICoffeeService _coffeeService;
 
-
-        public CoffeesController(AppDbContext db) : base(db) { }
-
-       
-
-        // GET: api/Coffees
-        [Authorize]
-        [HttpGet]
-        public async Task<ActionResult<IEnumerable<Coffee>>> GetCoffee()
+        public CoffeesController(ICoffeeService coffeeService)
         {
-            var user = await GetCurrentUserAsync();
-            if (user == null)
+            _coffeeService = coffeeService;
+        }
+
+        private Guid? GetCurrentUserId()
+        {
+            var userId = User.Claims.FirstOrDefault(c => c.Type == "sub")?.Value
+                         ?? User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
+
+            if (userId is null || !Guid.TryParse(userId, out var id))
+                return null;
+
+            return id;
+        }
+
+        [HttpGet]
+        public async Task<ActionResult<IEnumerable<CoffeeResponse>>> GetCoffees()
+        {
+            var userId = GetCurrentUserId();
+            if (userId is null)
                 return Unauthorized();
 
-            var coffees = await _db.Coffees
-        .Where(c => c.UserId == user.Id)
-        .Select(c => new DTOCoffee
-        {
-            Id = c.Id,
-            Name = c.Name,
-            Brand = c.Brand,
-            Roast = c.Roast,
-            Origin = c.Origin,
-            TastingNotes = c.TastingNotes
-        })
-        .ToListAsync();
-
+            var coffees = await _coffeeService.GetAllByUserIdAsync(userId.Value);
             return Ok(coffees);
         }
 
-        // GET: api/Coffees/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<DTOCoffee>> GetCoffee(Guid id)
+        public async Task<ActionResult<CoffeeResponse>> GetCoffee(Guid id)
         {
-            var user = await GetCurrentUserAsync();
-            if (user == null)
+            var userId = GetCurrentUserId();
+            if (userId is null)
                 return Unauthorized();
 
-            var coffee = await _db.Coffees
-        .Where(c => c.Id == id && c.UserId == user.Id)
-        .Select(c => new DTOCoffee
-        {
-            Id = c.Id,
-            Name = c.Name,
-            Brand = c.Brand,
-            Roast = c.Roast,
-            Origin = c.Origin,
-            TastingNotes = c.TastingNotes
-        })
-        .FirstOrDefaultAsync();
-
-            if (coffee == null)
+            var coffee = await _coffeeService.GetByIdAsync(id, userId.Value);
+            if (coffee is null)
                 return NotFound();
 
             return Ok(coffee);
-
-
         }
 
-        // PUT: api/Coffees/5
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        //[HttpPut("{id}")]
-        //public async Task<IActionResult> PutCoffee(Guid id, Coffee coffee)
-        //{
-        //    if (id != coffee.Id)
-        //    {
-        //        return BadRequest();
-        //    }
-
-        //    _db.Entry(coffee).State = EntityState.Modified;
-
-        //    try
-        //    {
-        //        await _db.SaveChangesAsync();
-        //    }
-        //    catch (DbUpdateConcurrencyException)
-        //    {
-        //        if (!CoffeeExists(id))
-        //        {
-        //            return NotFound();
-        //        }
-        //        else
-        //        {
-        //            throw;
-        //        }
-        //    }
-
-        //    return NoContent();
-        //}
-
-        // POST: api/Coffees
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        public async Task<ActionResult<DTOCoffee>> PostCoffee(DTOCoffee coffeeDTO)
+        public async Task<ActionResult<CoffeeResponse>> PostCoffee(CreateCoffeeRequest request)
         {
-            var user = await GetCurrentUserAsync();
-            if (user == null)
+            var userId = GetCurrentUserId();
+            if (userId is null)
                 return Unauthorized();
 
-            var coffee = new Coffee
-            {
-                
-                Name = coffeeDTO.Name,
-                Brand = coffeeDTO.Brand,
-                Roast = coffeeDTO.Roast,
-                Origin = coffeeDTO.Origin,
-                TastingNotes = coffeeDTO.TastingNotes,
-                UserId = user.Id,
-               
-            };
-
-
-            _db.Coffees.Add(coffee);
-            await _db.SaveChangesAsync();
-
-            return CreatedAtAction("GetCoffee", new { id = coffee.Id },coffeeDTO.Name);
+            var coffee = await _coffeeService.CreateAsync(request, userId.Value);
+            return CreatedAtAction(nameof(GetCoffee), new { id = coffee.Id }, coffee);
         }
-
-
-
-        //// DELETE: api/Coffees/5
-        //[HttpDelete("{id}")]
-        //public async Task<IActionResult> DeleteCoffee(Guid id)
-        //{
-        //    var coffee = await _db.Coffee.FindAsync(id);
-        //    if (coffee == null)
-        //    {
-        //        return NotFound();
-        //    }
-
-        //    _db.Coffee.Remove(coffee);
-        //    await _db.SaveChangesAsync();
-
-        //    return NoContent();
-        //}
-
-        //private bool CoffeeExists(Guid id)
-        //{
-        //    return _db.Coffee.Any(e => e.Id == id);
-        //}
     }
 }

@@ -1,4 +1,4 @@
-﻿using BrewLab.Models.Entities;
+﻿using BrewLab.Models.DBO;
 using BrewLab.Options;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
@@ -10,7 +10,7 @@ namespace BrewLab.Helpers
 
     public static class JwtTokenHelper
     {
-        public static string GenerateToken(User user, JwtSettings settings, out DateTime expiresAtUtc)
+        public static string GenerateToken(UserDBO user, JwtSettings settings, out DateTime expiresAtUtc)
         {
             var claims = new List<Claim>
         {

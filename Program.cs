@@ -1,10 +1,11 @@
 using System.Text;
+using BrewLab.Data;
 using BrewLab.Options;
+using BrewLab.Repositories;
+using BrewLab.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
-using Npgsql.EntityFrameworkCore.PostgreSQL;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -12,15 +13,22 @@ var port = Environment.GetEnvironmentVariable("PORT") ?? "5000";
 builder.WebHost.UseUrls($"http://*:{port}");
 
 // Bind Jwt settings
-builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("Jwt"));
+var jwtSettings = builder.Configuration.GetSection("Jwt").Get<JwtSettings>() 
+    ?? throw new InvalidOperationException("JWT settings not configured");
+builder.Services.AddSingleton(jwtSettings);
 
-//// EF Core InMemory (swap to SQL Server if needed)
-builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+// Database connection factory
+builder.Services.AddSingleton<IDbConnectionFactory, NpgsqlConnectionFactory>();
 
-//// Use EF Core InMemory database
-//builder.Services.AddDbContext<AppDbContext>(options =>
-//    options.UseInMemoryDatabase("BrewLabDb"));
+// Repositories
+builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<ICoffeeRepository, CoffeeRepository>();
+builder.Services.AddScoped<IExperimentRepository, ExperimentRepository>();
+
+// Services
+builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<ICoffeeService, CoffeeService>();
+builder.Services.AddScoped<IExperimentService, ExperimentService>();
 
 builder.Services.AddControllers();
 
@@ -40,8 +48,7 @@ builder.Services.AddCors(options =>
 });
 
 // JWT Authentication
-var jwtSection = builder.Configuration.GetSection("Jwt");
-var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSection["Key"]!));
+var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings.Key));
 
 builder.Services
     .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -53,8 +60,8 @@ builder.Services
             ValidateAudience = true,
             ValidateIssuerSigningKey = true,
             ValidateLifetime = true,
-            ValidIssuer = jwtSection["Issuer"],
-            ValidAudience = jwtSection["Audience"],
+            ValidIssuer = jwtSettings.Issuer,
+            ValidAudience = jwtSettings.Audience,
             IssuerSigningKey = key,
             ClockSkew = TimeSpan.Zero
         };
