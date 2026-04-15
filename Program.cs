@@ -10,11 +10,25 @@ using Microsoft.OpenApi.Models;
 var builder = WebApplication.CreateBuilder(args);
 
 var port = Environment.GetEnvironmentVariable("PORT") ?? "5000";
-builder.WebHost.UseUrls($"http://*:{port}");
+builder.WebHost.UseUrls($"http://0.0.0.0:{port}", $"http://[::]:{port}");
 
 // Bind Jwt settings
 var jwtSettings = builder.Configuration.GetSection("Jwt").Get<JwtSettings>() 
     ?? throw new InvalidOperationException("JWT settings not configured");
+
+// Validate JWT Key is configured
+if (string.IsNullOrWhiteSpace(jwtSettings.Key))
+{
+    throw new InvalidOperationException(
+        "JWT Key is not configured. Please set Jwt:Key in appsettings.json or environment variable Jwt__Key");
+}
+
+if (jwtSettings.Key.Length < 32)
+{
+    throw new InvalidOperationException(
+        "JWT Key must be at least 32 characters long for security purposes");
+}
+
 builder.Services.AddSingleton(jwtSettings);
 
 // Database connection factory
