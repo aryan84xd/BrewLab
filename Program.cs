@@ -1,11 +1,8 @@
 using System.Text;
-using BrewLab.Abstraction.Data;
-using BrewLab.Abstraction.Repositories;
-using BrewLab.Abstraction.Services;
-using BrewLab.BusinessLogic.Services;
-using BrewLab.Common.Options;
-using BrewLab.DataAccess.Data;
-using BrewLab.DataAccess.Repositories;
+using BrewLab.Data;
+using BrewLab.Options;
+using BrewLab.Repositories;
+using BrewLab.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
@@ -47,8 +44,7 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ICoffeeService, CoffeeService>();
 builder.Services.AddScoped<IExperimentService, ExperimentService>();
 
-builder.Services.AddControllers()
-    .AddApplicationPart(typeof(BrewLab.ApiServices.Controllers.AuthController).Assembly);
+builder.Services.AddControllers();
 
 builder.Services.AddCors(options =>
 {

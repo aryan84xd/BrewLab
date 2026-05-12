@@ -7,46 +7,14 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="BrewLab.DomainModel\**" />
-    <Compile Remove="BrewLab.Abstraction\**" />
-    <Compile Remove="BrewLab.DataAccess\**" />
-    <Compile Remove="BrewLab.BusinessLogic\**" />
-    <Compile Remove="BrewLab.ApiServices\**" />
-    <Compile Remove="BrewLab.Common\**" />
-    <Content Remove="BrewLab.DomainModel\**" />
-    <Content Remove="BrewLab.Abstraction\**" />
-    <Content Remove="BrewLab.DataAccess\**" />
-    <Content Remove="BrewLab.BusinessLogic\**" />
-    <Content Remove="BrewLab.ApiServices\**" />
-    <Content Remove="BrewLab.Common\**" />
-    <EmbeddedResource Remove="BrewLab.DomainModel\**" />
-    <EmbeddedResource Remove="BrewLab.Abstraction\**" />
-    <EmbeddedResource Remove="BrewLab.DataAccess\**" />
-    <EmbeddedResource Remove="BrewLab.BusinessLogic\**" />
-    <EmbeddedResource Remove="BrewLab.ApiServices\**" />
-    <EmbeddedResource Remove="BrewLab.Common\**" />
-    <None Remove="BrewLab.DomainModel\**" />
-    <None Remove="BrewLab.Abstraction\**" />
-    <None Remove="BrewLab.DataAccess\**" />
-    <None Remove="BrewLab.BusinessLogic\**" />
-    <None Remove="BrewLab.ApiServices\**" />
-    <None Remove="BrewLab.Common\**" />
-  </ItemGroup>
-
-  <ItemGroup>
+    <PackageReference Include="BCrypt.Net-Next" Version="4.1.0" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="9.0.13" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.11" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="9.0.13" />
+    <PackageReference Include="Npgsql" Version="9.0.3" />
     <PackageReference Include="Swashbuckle.AspNetCore.Swagger" Version="9.0.6" />
     <PackageReference Include="Swashbuckle.AspNetCore.SwaggerGen" Version="9.0.6" />
     <PackageReference Include="Swashbuckle.AspNetCore.SwaggerUI" Version="9.0.6" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="BrewLab.ApiServices\BrewLab.ApiServices.csproj" />
-    <ProjectReference Include="BrewLab.BusinessLogic\BrewLab.BusinessLogic.csproj" />
-    <ProjectReference Include="BrewLab.DataAccess\BrewLab.DataAccess.csproj" />
-    <ProjectReference Include="BrewLab.Common\BrewLab.Common.csproj" />
   </ItemGroup>
 
   <ItemGroup>
