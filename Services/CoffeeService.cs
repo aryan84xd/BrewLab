@@ -1,4 +1,5 @@
 using BrewLab.Models.DBO;
+using BrewLab.Models.DTOs.CoffeeDTO;
 using BrewLab.Models.Requests;
 using BrewLab.Models.Responses;
 using BrewLab.Repositories;
@@ -7,9 +8,9 @@ namespace BrewLab.Services
 {
     public interface ICoffeeService
     {
-        Task<CoffeeResponse?> GetByIdAsync(Guid id, Guid userId);
-        Task<IEnumerable<CoffeeResponse>> GetAllByUserIdAsync(Guid userId);
-        Task<CoffeeResponse> CreateAsync(CreateCoffeeRequest request, Guid userId);
+        Task<DTOCoffee?> GetByIdAsync(Guid id, Guid userId);
+        Task<IEnumerable<DTOCoffee>> GetAllByUserIdAsync(Guid userId);
+        Task<DTOCoffee> CreateAsync(CreateCoffeeRequest request, Guid userId);
     }
 
     public class CoffeeService : ICoffeeService
@@ -21,40 +22,45 @@ namespace BrewLab.Services
             _coffeeRepository = coffeeRepository;
         }
 
-        public async Task<CoffeeResponse?> GetByIdAsync(Guid id, Guid userId)
+        public async Task<DTOCoffee?> GetByIdAsync(Guid id, Guid userId)
         {
-            var coffee = await _coffeeRepository.GetByIdAsync(id, userId);
-            if (coffee is null)
+            var coffeeDbo = await _coffeeRepository.GetByIdAsync(id, userId);
+            if (coffeeDbo is null)
                 return null;
 
-            return new CoffeeResponse
+            return MapDboToDto(coffeeDbo);
+        }
+
+        public async Task<IEnumerable<DTOCoffee>> GetAllByUserIdAsync(Guid userId)
+        {
+            var coffeeDboList = await _coffeeRepository.GetAllByUserIdAsync(userId);
+            return coffeeDboList.Select(MapDboToDto);
+        }
+
+        public async Task<DTOCoffee> CreateAsync(CreateCoffeeRequest request, Guid userId)
+        {
+            var coffeeDbo = MapRequestToDbo(request, userId);
+            var createdDbo = await _coffeeRepository.CreateAsync(coffeeDbo);
+            return MapDboToDto(createdDbo);
+        }
+
+        private static DTOCoffee MapDboToDto(CoffeeDBO dbo)
+        {
+            return new DTOCoffee
             {
-                Id = coffee.Id,
-                Name = coffee.Name,
-                Brand = coffee.Brand,
-                Roast = coffee.Roast,
-                Origin = coffee.Origin,
-                TastingNotes = coffee.TastingNotes
+                Id = dbo.Id,
+                Name = dbo.Name,
+                Brand = dbo.Brand,
+                Roast = dbo.Roast,
+                Origin = dbo.Origin,
+                TastingNotes = dbo.TastingNotes,
+                UserId = dbo.UserId
             };
         }
 
-        public async Task<IEnumerable<CoffeeResponse>> GetAllByUserIdAsync(Guid userId)
+        private static CoffeeDBO MapRequestToDbo(CreateCoffeeRequest request, Guid userId)
         {
-            var coffees = await _coffeeRepository.GetAllByUserIdAsync(userId);
-            return coffees.Select(c => new CoffeeResponse
-            {
-                Id = c.Id,
-                Name = c.Name,
-                Brand = c.Brand,
-                Roast = c.Roast,
-                Origin = c.Origin,
-                TastingNotes = c.TastingNotes
-            });
-        }
-
-        public async Task<CoffeeResponse> CreateAsync(CreateCoffeeRequest request, Guid userId)
-        {
-            var coffee = new CoffeeDBO
+            return new CoffeeDBO
             {
                 Name = request.Name,
                 Brand = request.Brand,
@@ -62,18 +68,6 @@ namespace BrewLab.Services
                 Origin = request.Origin,
                 TastingNotes = request.TastingNotes,
                 UserId = userId
-            };
-
-            await _coffeeRepository.CreateAsync(coffee);
-
-            return new CoffeeResponse
-            {
-                Id = coffee.Id,
-                Name = coffee.Name,
-                Brand = coffee.Brand,
-                Roast = coffee.Roast,
-                Origin = coffee.Origin,
-                TastingNotes = coffee.TastingNotes
             };
         }
     }

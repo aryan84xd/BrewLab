@@ -2,13 +2,12 @@
 {
     public class DTOCoffee
     {
-        
-        public Guid? Id { get; set; } 
-        public required string Name { get; set; }
-        public required string Brand { get; set; }
-        public required string Roast { get; set; }
+        public Guid Id { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public string Brand { get; set; } = string.Empty;
+        public string Roast { get; set; } = string.Empty;
         public string? Origin { get; set; }
-
         public string? TastingNotes { get; set; }
+        public Guid UserId { get; set; }
     }
 }

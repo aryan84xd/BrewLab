@@ -1,3 +1,4 @@
+using BrewLab.Models.Common;
 using BrewLab.Models.Requests;
 using BrewLab.Models.Responses;
 using BrewLab.Services;
@@ -31,39 +32,69 @@ namespace BrewLab.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<CoffeeResponse>>> GetCoffees()
+        public async Task<ActionResult<ApiResponse<IEnumerable<CoffeeResponse>>>> GetCoffees()
         {
             var userId = GetCurrentUserId();
             if (userId is null)
-                return Unauthorized();
+                return Ok(ApiResponse<IEnumerable<CoffeeResponse>>.FailureResponse("Unauthorized access."));
 
-            var coffees = await _coffeeService.GetAllByUserIdAsync(userId.Value);
-            return Ok(coffees);
+            var dtos = await _coffeeService.GetAllByUserIdAsync(userId.Value);
+            var responses = dtos.Select(dto => new CoffeeResponse
+            {
+                Id = dto.Id,
+                Name = dto.Name,
+                Brand = dto.Brand,
+                Roast = dto.Roast,
+                Origin = dto.Origin,
+                TastingNotes = dto.TastingNotes
+            });
+
+            return Ok(ApiResponse<IEnumerable<CoffeeResponse>>.SuccessResponse(responses));
         }
 
         [HttpGet("{id}")]
-        public async Task<ActionResult<CoffeeResponse>> GetCoffee(Guid id)
+        public async Task<ActionResult<ApiResponse<CoffeeResponse>>> GetCoffee(Guid id)
         {
             var userId = GetCurrentUserId();
             if (userId is null)
-                return Unauthorized();
+                return Ok(ApiResponse<CoffeeResponse>.FailureResponse("Unauthorized access."));
 
-            var coffee = await _coffeeService.GetByIdAsync(id, userId.Value);
-            if (coffee is null)
-                return NotFound();
+            var dto = await _coffeeService.GetByIdAsync(id, userId.Value);
+            if (dto is null)
+                return Ok(ApiResponse<CoffeeResponse>.FailureResponse("Coffee not found."));
 
-            return Ok(coffee);
+            var response = new CoffeeResponse
+            {
+                Id = dto.Id,
+                Name = dto.Name,
+                Brand = dto.Brand,
+                Roast = dto.Roast,
+                Origin = dto.Origin,
+                TastingNotes = dto.TastingNotes
+            };
+
+            return Ok(ApiResponse<CoffeeResponse>.SuccessResponse(response));
         }
 
         [HttpPost]
-        public async Task<ActionResult<CoffeeResponse>> PostCoffee(CreateCoffeeRequest request)
+        public async Task<ActionResult<ApiResponse<CoffeeResponse>>> PostCoffee(CreateCoffeeRequest request)
         {
             var userId = GetCurrentUserId();
             if (userId is null)
-                return Unauthorized();
+                return Ok(ApiResponse<CoffeeResponse>.FailureResponse("Unauthorized access."));
 
-            var coffee = await _coffeeService.CreateAsync(request, userId.Value);
-            return CreatedAtAction(nameof(GetCoffee), new { id = coffee.Id }, coffee);
+            var dto = await _coffeeService.CreateAsync(request, userId.Value);
+            var response = new CoffeeResponse
+            {
+                Id = dto.Id,
+                Name = dto.Name,
+                Brand = dto.Brand,
+                Roast = dto.Roast,
+                Origin = dto.Origin,
+                TastingNotes = dto.TastingNotes
+            };
+
+            return Ok(ApiResponse<CoffeeResponse>.SuccessResponse(response));
         }
     }
 }

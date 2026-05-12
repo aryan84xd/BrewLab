@@ -1,14 +1,14 @@
 using BrewLab.Models.DBO;
+using BrewLab.Models.DTOs.ExperimentDTO;
 using BrewLab.Models.Requests;
-using BrewLab.Models.Responses;
 using BrewLab.Repositories;
 
 namespace BrewLab.Services
 {
     public interface IExperimentService
     {
-        Task<IEnumerable<ExperimentResponse>> GetByCoffeeIdAsync(Guid coffeeId, Guid userId);
-        Task<ExperimentResponse> CreateAsync(CreateExperimentRequest request, Guid userId);
+        Task<(bool Success, string? ErrorMessage, IEnumerable<DTOExperiment>? Data)> GetByCoffeeIdAsync(Guid coffeeId, Guid userId);
+        Task<(bool Success, string? ErrorMessage, DTOExperiment? Data)> CreateAsync(CreateExperimentRequest request, Guid userId);
     }
 
     public class ExperimentService : IExperimentService
@@ -22,40 +22,56 @@ namespace BrewLab.Services
             _coffeeRepository = coffeeRepository;
         }
 
-        public async Task<IEnumerable<ExperimentResponse>> GetByCoffeeIdAsync(Guid coffeeId, Guid userId)
+        public async Task<(bool Success, string? ErrorMessage, IEnumerable<DTOExperiment>? Data)> GetByCoffeeIdAsync(Guid coffeeId, Guid userId)
         {
             var coffeeExists = await _coffeeRepository.ExistsAsync(coffeeId, userId);
             if (!coffeeExists)
-                throw new InvalidOperationException("Coffee not found for this user.");
+                return (false, "Coffee not found for this user.", null);
 
-            var experiments = await _experimentRepository.GetByCoffeeIdAsync(coffeeId, userId);
-            return experiments.Select(e => new ExperimentResponse
-            {
-                Id = e.Id,
-                CoffeeId = e.CoffeeId,
-                Date = e.Date,
-                BrewMethod = e.BrewMethod,
-                CoffeeWeight = e.CoffeeWeight,
-                WaterWeight = e.WaterWeight,
-                BrewTime = e.BrewTime,
-                Remark = e.Remark,
-                Aroma = e.Aroma,
-                Acidity = e.Acidity,
-                Body = e.Body,
-                Overall = e.Overall
-            });
+            var experimentDboList = await _experimentRepository.GetByCoffeeIdAsync(coffeeId, userId);
+            var dtos = experimentDboList.Select(MapDboToDto);
+            return (true, null, dtos);
         }
 
-        public async Task<ExperimentResponse> CreateAsync(CreateExperimentRequest request, Guid userId)
+        public async Task<(bool Success, string? ErrorMessage, DTOExperiment? Data)> CreateAsync(CreateExperimentRequest request, Guid userId)
         {
             var coffeeExists = await _coffeeRepository.ExistsAsync(request.CoffeeId, userId);
             if (!coffeeExists)
-                throw new InvalidOperationException("Coffee not found for the user.");
+                return (false, "Coffee not found for the user.", null);
 
-            var experiment = new ExperimentDBO
+            var experimentDbo = MapRequestToDbo(request, userId);
+            var createdDbo = await _experimentRepository.CreateAsync(experimentDbo);
+            var dto = MapDboToDto(createdDbo);
+            return (true, null, dto);
+        }
+
+        private static DTOExperiment MapDboToDto(ExperimentDBO dbo)
+        {
+            return new DTOExperiment
+            {
+                Id = dbo.Id,
+                CoffeeId = dbo.CoffeeId,
+                Date = dbo.Date,
+                BrewMethod = dbo.BrewMethod,
+                CoffeeWeight = dbo.CoffeeWeight,
+                WaterWeight = dbo.WaterWeight,
+                BrewTime = dbo.BrewTime,
+                Remark = dbo.Remark,
+                Aroma = dbo.Aroma,
+                Acidity = dbo.Acidity,
+                Body = dbo.Body,
+                Overall = dbo.Overall,
+                UserId = dbo.UserId
+            };
+        }
+
+        private static ExperimentDBO MapRequestToDbo(CreateExperimentRequest request, Guid userId)
+        {
+            return new ExperimentDBO
             {
                 CoffeeId = request.CoffeeId,
                 UserId = userId,
+                Date = DateTime.UtcNow,
                 BrewMethod = request.BrewMethod,
                 CoffeeWeight = request.CoffeeWeight,
                 WaterWeight = request.WaterWeight,
@@ -65,24 +81,6 @@ namespace BrewLab.Services
                 Acidity = request.Acidity,
                 Body = request.Body,
                 Overall = request.Overall
-            };
-
-            await _experimentRepository.CreateAsync(experiment);
-
-            return new ExperimentResponse
-            {
-                Id = experiment.Id,
-                CoffeeId = experiment.CoffeeId,
-                Date = experiment.Date,
-                BrewMethod = experiment.BrewMethod,
-                CoffeeWeight = experiment.CoffeeWeight,
-                WaterWeight = experiment.WaterWeight,
-                BrewTime = experiment.BrewTime,
-                Remark = experiment.Remark,
-                Aroma = experiment.Aroma,
-                Acidity = experiment.Acidity,
-                Body = experiment.Body,
-                Overall = experiment.Overall
             };
         }
     }
