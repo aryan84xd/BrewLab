@@ -12,7 +12,17 @@ using Npgsql;
 var builder = WebApplication.CreateBuilder(args);
 
 var port = Environment.GetEnvironmentVariable("PORT") ?? "5000";
-builder.WebHost.UseUrls($"http://localhost:{port}");
+
+// Bind to all interfaces (0.0.0.0) in production, localhost in development
+if (builder.Environment.IsDevelopment())
+{
+    builder.WebHost.UseUrls($"http://localhost:{port}");
+}
+else
+{
+    builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
+}
+
 
 // Bind Jwt settings
 var jwtSettings = builder.Configuration.GetSection("Jwt").Get<JwtSettings>() 
