@@ -14,7 +14,7 @@ A modern coffee experiment tracking API built with .NET 9, featuring a clean arc
 git clone https://github.com/aryan84xd/BrewLab.git
 cd BrewLab
 
-# Run the API
+# Run the API 
 dotnet run
 
 # API will be available at http://localhost:5000
