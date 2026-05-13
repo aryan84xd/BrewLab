@@ -43,50 +43,16 @@ if (jwtSettings.Key.Length < 32)
 
 builder.Services.AddSingleton(jwtSettings);
 
-// Check if PostgreSQL is available
-bool useInMemoryDb = false;
-try
-{
-    var testConnectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-    if (!string.IsNullOrEmpty(testConnectionString))
-    {
-        using var testConnection = new NpgsqlConnection(testConnectionString);
-        testConnection.Open();
-        testConnection.Close();
-        Console.WriteLine("? PostgreSQL connection successful - Using PostgreSQL database");
-    }
-    else
-    {
-        useInMemoryDb = true;
-    }
-}
-catch (Exception ex)
-{
-    Console.WriteLine($"? PostgreSQL not available: {ex.Message}");
-    Console.WriteLine("? Falling back to In-Memory database");
-    useInMemoryDb = true;
-}
+// Configure PostgreSQL database and repositories for production
+// Expect the connection string to be provided via configuration (e.g. environment
+// variable 'ConnectionStrings__DefaultConnection'). The NpgsqlConnectionFactory
+// will read that connection string at runtime.
+builder.Services.AddSingleton<IDbConnectionFactory, NpgsqlConnectionFactory>();
 
-if (useInMemoryDb)
-{
-    // In-Memory Database
-    builder.Services.AddSingleton<IInMemoryDatabase, InMemoryDatabase>();
-
-    // In-Memory Repositories
-    builder.Services.AddScoped<IUserRepository, InMemoryUserRepository>();
-    builder.Services.AddScoped<ICoffeeRepository, InMemoryCoffeeRepository>();
-    builder.Services.AddScoped<IExperimentRepository, InMemoryExperimentRepository>();
-}
-else
-{
-    // PostgreSQL Database
-    builder.Services.AddSingleton<IDbConnectionFactory, NpgsqlConnectionFactory>();
-
-    // PostgreSQL Repositories
-    builder.Services.AddScoped<IUserRepository, UserRepository>();
-    builder.Services.AddScoped<ICoffeeRepository, CoffeeRepository>();
-    builder.Services.AddScoped<IExperimentRepository, ExperimentRepository>();
-}
+// PostgreSQL Repositories
+builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<ICoffeeRepository, CoffeeRepository>();
+builder.Services.AddScoped<IExperimentRepository, ExperimentRepository>();
 
 // Services (work with both database types)
 builder.Services.AddScoped<IAuthService, AuthService>();
