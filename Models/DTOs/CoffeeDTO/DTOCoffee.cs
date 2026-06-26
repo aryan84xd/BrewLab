@@ -1,4 +1,6 @@
-﻿namespace BrewLab.Models.DTOs.CoffeeDTO
+﻿using System.Diagnostics;
+
+namespace BrewLab.Models.DTOs.CoffeeDTO
 {
     public class DTOCoffee
     {
@@ -8,6 +10,8 @@
         public string Roast { get; set; } = string.Empty;
         public string? Origin { get; set; }
         public string? TastingNotes { get; set; }
+        public DateTime? RoastDate { get; set; }
+        public string? Process { get; set; }
         public Guid UserId { get; set; }
     }
 }

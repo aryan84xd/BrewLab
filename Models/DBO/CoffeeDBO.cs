@@ -8,6 +8,8 @@ namespace BrewLab.Models.DBO
         public string Roast { get; set; } = string.Empty;
         public string? Origin { get; set; }
         public string? TastingNotes { get; set; }
+        public DateTime? RoastDate { get; set; }
+        public string? Process { get; set; }
         public Guid UserId { get; set; }
     }
 }
