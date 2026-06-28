@@ -1,14 +1,10 @@
-using System.Text;
-using System.Text;
+using BrewLab.Authentication;
 using BrewLab.Data;
-using BrewLab.Options;
-using BrewLab.Repositories;
-using BrewLab.Services;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
+using BrewLab.Repositories.Implementations;
+using BrewLab.Repositories.Interfaces;
+using BrewLab.Services.Implementations;
+using BrewLab.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
-using Microsoft.OpenApi.Models;
-using Npgsql;
 using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -26,25 +22,6 @@ else
 }
 
 
-// Bind Jwt settings
-var jwtSettings = builder.Configuration.GetSection("Jwt").Get<JwtSettings>() 
-    ?? throw new InvalidOperationException("JWT settings not configured");
-
-// Validate JWT Key is configured
-if (string.IsNullOrWhiteSpace(jwtSettings.Key))
-{
-    throw new InvalidOperationException(
-        "JWT Key is not configured. Please set Jwt:Key in appsettings.json or environment variable Jwt__Key");
-}
-                       
-if (jwtSettings.Key.Length < 32)
-{
-    throw new InvalidOperationException(
-        "JWT Key must be at least 32 characters long for security purposes");
-}
-
-builder.Services.AddSingleton(jwtSettings);
-
 //Db Context
 builder.Services.AddDbContext<AppDbContext>(options =>
 {
@@ -53,18 +30,22 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(connectionString);
 });
 
-
-// PostgreSQL Repositories
-builder.Services.AddScoped<IUserRepository, UserRepository>();
-builder.Services.AddScoped<ICoffeeRepository, CoffeeRepository>();
-builder.Services.AddScoped<IExperimentRepository, ExperimentRepository>();
-
-// Services (work with both database types)
-builder.Services.AddScoped<IAuthService, AuthService>();
-builder.Services.AddScoped<ICoffeeService, CoffeeService>();
-builder.Services.AddScoped<IExperimentService, ExperimentService>();
-
 builder.Services.AddControllers();
+
+builder.Services.AddJwtAuthentication(builder.Configuration);
+
+// Register Authentication Services
+builder.Services.AddScoped<ResponseFactory>();
+builder.Services.AddScoped<IPasswordHasher, BCryptPasswordHasher>();
+builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IAuthService, AuthService>();
+
+// Register Coffee Services
+builder.Services.AddScoped<ICoffeeRepository, CoffeeRepository>();
+builder.Services.AddScoped<ICoffeeService, CoffeeService>();
+//Register Experiment Services
+builder.Services.AddScoped<IExperimentRepository, ExperimentRepository>();
+builder.Services.AddScoped<IExperimentService, ExperimentService>();
 
 builder.Services.AddCors(options =>
 {
@@ -83,7 +64,7 @@ builder.Services.AddCors(options =>
             .AllowCredentials();
     });
 
-    // Development policy - allow everything
+   
     options.AddPolicy("AllowAll", policy =>
     {
         policy
@@ -93,55 +74,7 @@ builder.Services.AddCors(options =>
     });
 });
 
-// JWT Authentication
-var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings.Key));
 
-builder.Services
-    .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer(options =>
-    {
-        // SaveToken makes the raw token available via AuthenticationProperties if needed
-        options.SaveToken = true;
-
-        options.TokenValidationParameters = new TokenValidationParameters
-        {
-            ValidateIssuer = true,
-            ValidateAudience = true,
-            ValidateIssuerSigningKey = true,
-            ValidateLifetime = true,
-            ValidIssuer = jwtSettings.Issuer,
-            ValidAudience = jwtSettings.Audience,
-            IssuerSigningKey = key,
-            ClockSkew = TimeSpan.Zero,
-            // Ensure the NameClaimType maps to the 'sub' claim so ClaimTypes.NameIdentifier/"sub" are populated
-            NameClaimType = System.IdentityModel.Tokens.Jwt.JwtRegisteredClaimNames.Sub
-        };
-
-        // Add simple logging hooks to help diagnose authentication problems at runtime
-        options.Events = new Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerEvents
-        {
-            OnAuthenticationFailed = ctx =>
-            {
-                var logger = ctx.HttpContext.RequestServices.GetService<Microsoft.Extensions.Logging.ILoggerFactory>()
-                             ?.CreateLogger("JwtAuth");
-                logger?.LogError(ctx.Exception, "JWT authentication failed");
-                return Task.CompletedTask;
-            },
-            OnTokenValidated = ctx =>
-            {
-                var logger = ctx.HttpContext.RequestServices.GetService<Microsoft.Extensions.Logging.ILoggerFactory>()
-                             ?.CreateLogger("JwtAuth");
-                var sub = ctx.Principal?.FindFirst(System.IdentityModel.Tokens.Jwt.JwtRegisteredClaimNames.Sub)?.Value
-                          ?? ctx.Principal?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-                logger?.LogInformation("JWT token validated for subject {sub}", sub);
-                return Task.CompletedTask;
-            }
-        };
-    });
-
-builder.Services.AddAuthorization();
-
-// Swagger + JWT support
 builder.Services.AddOpenApi();
 
 var app = builder.Build();

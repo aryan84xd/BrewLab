@@ -1,9 +1,7 @@
-using BrewLab.Models.Common;
-using BrewLab.Models.DTOs.UserDTO;
-using BrewLab.Services;
-using Microsoft.AspNetCore.Authorization;
+using BrewLab.Models.RequestModels;
+using BrewLab.Models.ResponseModels;
+using BrewLab.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
 
 namespace BrewLab.Controllers
 {
@@ -15,55 +13,55 @@ namespace BrewLab.Controllers
 
         public AuthController(IAuthService authService)
         {
-            _authService = authService;
+            _authService = authService ?? throw new ArgumentNullException(nameof(authService));
         }
 
+        /// <summary>
+        /// Register a new user account
+        /// </summary>
+        /// <param name="request">Registration details (Name, Email, Password)</param>
+        /// <returns>Success or error message</returns>
         [HttpPost("register")]
-        public async Task<ActionResult<ApiResponse<DTOUserLoginResponse>>> Register([FromBody] DTOUserRegisterRequest dto)
+        [ProducesResponseType(typeof(BaseResponse), StatusCodes.Status201Created)]
+        [ProducesResponseType(typeof(BaseResponse), StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> Register([FromBody] RegisterRequestModel request)
         {
-            try
-            {
-                var response = await _authService.RegisterAsync(dto);
-                return Ok(ApiResponse<DTOUserLoginResponse>.SuccessResponse(response));
-            }
-            catch (InvalidOperationException ex)
-            {
-                return Ok(ApiResponse<DTOUserLoginResponse>.FailureResponse(ex.Message));
-            }
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            var result = await _authService.RegisterAsync(request);
+
+            if (!result.Success)
+                return BadRequest(result);
+
+            return CreatedAtAction(nameof(Register), result);
         }
 
+        /// <summary>
+        /// Login with email and password
+        /// </summary>
+        /// <param name="request">Login credentials (Email, Password)</param>
+        /// <returns>JWT token and user details on success</returns>
         [HttpPost("login")]
-        public async Task<ActionResult<ApiResponse<DTOUserLoginResponse>>> Login([FromBody] DTOUserLoginRequest dto)
+        [ProducesResponseType(typeof(LoginResponseModel), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(LoginResponseModel), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(LoginResponseModel), StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> Login([FromBody] LoginRequestModel request)
         {
-            var response = await _authService.LoginAsync(dto);
-            if (response is null)
-                return Ok(ApiResponse<DTOUserLoginResponse>.FailureResponse("Invalid credentials."));
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
 
-            return Ok(ApiResponse<DTOUserLoginResponse>.SuccessResponse(response));
-        }
+            var result = await _authService.LoginAsync(request);
 
-        [Authorize]
-        [HttpGet("me")]
-        public async Task<ActionResult<ApiResponse<object>>> Me()
-        {
-            var userId = User.Claims.FirstOrDefault(c => c.Type == "sub")?.Value
-                         ?? User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
-
-            if (userId is null || !Guid.TryParse(userId, out var id))
-                return Ok(ApiResponse<object>.FailureResponse("Unauthorized access."));
-
-            var user = await _authService.GetUserByIdAsync(id);
-            if (user is null) 
-                return Ok(ApiResponse<object>.FailureResponse("User not found."));
-
-            var userData = new
+            if (!result.Success)
             {
-                user.Id,
-                user.Name,
-                user.Email
-            };
+                if (result.Error == "InvalidCredentials")
+                    return Unauthorized(result);
 
-            return Ok(ApiResponse<object>.SuccessResponse(userData));
+                return BadRequest(result);
+            }
+
+            return Ok(result);
         }
     }
 }
