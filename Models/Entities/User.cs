@@ -2,12 +2,15 @@
 {
     public class User
     {
-        public Guid Id { get; set; } = Guid.NewGuid();  // auto-generate
-        public string Name { get; set; }
-        public string Email { get; set; }
-        public string PasswordHash { get; set; }
+        public Guid Id { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public string Email { get; set; } = string.Empty;
+        public string PasswordHash { get; set; } = string.Empty;
+        public DateTime CreatedAt { get; set; }
 
-        public ICollection<Coffee>? Coffees { get; set; }
 
+        // Navigation
+        public ICollection<Coffee> Coffees { get; set; } = [];
+        public ICollection<Experiment> Experiments { get; set; } = [];
     }
 }

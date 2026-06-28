@@ -5,9 +5,11 @@ using BrewLab.Options;
 using BrewLab.Repositories;
 using BrewLab.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Npgsql;
+using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -34,7 +36,7 @@ if (string.IsNullOrWhiteSpace(jwtSettings.Key))
     throw new InvalidOperationException(
         "JWT Key is not configured. Please set Jwt:Key in appsettings.json or environment variable Jwt__Key");
 }
-
+                       
 if (jwtSettings.Key.Length < 32)
 {
     throw new InvalidOperationException(
@@ -43,11 +45,14 @@ if (jwtSettings.Key.Length < 32)
 
 builder.Services.AddSingleton(jwtSettings);
 
-// Configure PostgreSQL database and repositories for production
-// Expect the connection string to be provided via configuration (e.g. environment
-// variable 'ConnectionStrings__DefaultConnection'). The NpgsqlConnectionFactory
-// will read that connection string at runtime.
-builder.Services.AddSingleton<IDbConnectionFactory, NpgsqlConnectionFactory>();
+//Db Context
+builder.Services.AddDbContext<AppDbContext>(options =>
+{
+    var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
+        ?? throw new InvalidOperationException("Database connection string not configured");
+    options.UseNpgsql(connectionString);
+});
+
 
 // PostgreSQL Repositories
 builder.Services.AddScoped<IUserRepository, UserRepository>();
@@ -137,43 +142,27 @@ builder.Services
 builder.Services.AddAuthorization();
 
 // Swagger + JWT support
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen(c =>
-{
-    var jwtScheme = new OpenApiSecurityScheme
-    {
-        Scheme = "bearer",
-        BearerFormat = "JWT",
-        Name = "Authorization",
-        In = ParameterLocation.Header,
-        Type = SecuritySchemeType.Http,
-        Description = "Enter 'Bearer {token}'",
-        Reference = new OpenApiReference
-        {
-            Id = JwtBearerDefaults.AuthenticationScheme,
-            Type = ReferenceType.SecurityScheme
-        }
-    };
-
-    c.AddSecurityDefinition(jwtScheme.Reference.Id, jwtScheme);
-    c.AddSecurityRequirement(new OpenApiSecurityRequirement
-    {
-        { jwtScheme, Array.Empty<string>() }
-    });
-});
+builder.Services.AddOpenApi();
 
 var app = builder.Build();
 
 // Use appropriate CORS policy based on environment
 if (app.Environment.IsDevelopment())
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
-    app.UseCors("AllowAll"); // Allow all origins in development
+    app.MapOpenApi();
+
+    app.MapScalarApiReference(options =>
+    {
+        options
+            .WithTitle("BrewLab API")
+            .WithDefaultHttpClient(ScalarTarget.CSharp, ScalarClient.HttpClient);
+    });
+
+    app.UseCors("AllowAll");
 }
 else
 {
-    app.UseCors("AllowFrontend"); // Restricted CORS in production
+    app.UseCors("AllowFrontend");
 }
 
 app.UseAuthentication();

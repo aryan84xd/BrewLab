@@ -1,17 +1,18 @@
-﻿using System.Diagnostics;
+using BrewLab.Models.Enums;
 
-namespace BrewLab.Models.DTOs.CoffeeDTO
+namespace BrewLab.Models.ResponseModels
 {
-    public class DTOCoffee
+    public class CoffeeResponseModel : BaseResponse
     {
         public Guid Id { get; set; }
+        public DateTime CreatedAt { get; set; }
+
         public string Name { get; set; } = string.Empty;
         public string Brand { get; set; } = string.Empty;
-        public string Roast { get; set; } = string.Empty;
+        public RoastLevel Roast { get; set; }
         public string? Origin { get; set; }
         public string? TastingNotes { get; set; }
         public DateTime? RoastDate { get; set; }
-        public string? Process { get; set; }
-        public Guid UserId { get; set; }
+        public ProcessType? Process { get; set; }
     }
 }

@@ -1,12 +1,9 @@
-﻿using BrewLab.Models.Enums;
+using BrewLab.Models.Enums;
 
-namespace BrewLab.Models.Entities
+namespace BrewLab.Models.RequestModels
 {
-    public class Coffee
+    public class UpdateCoffeeRequestModel
     {
-        public DateTime CreatedAt { get; set; }
-
-        public Guid Id { get; set; }
         public string Name { get; set; } = string.Empty;
         public string Brand { get; set; } = string.Empty;
         public RoastLevel Roast { get; set; }
@@ -14,10 +11,5 @@ namespace BrewLab.Models.Entities
         public string? TastingNotes { get; set; }
         public DateTime? RoastDate { get; set; }
         public ProcessType? Process { get; set; }
-        public Guid UserId { get; set; }
-
-        public User User { get; set; } = null!;
-
-        public ICollection<Experiment> Experiments { get; set; } = [];
     }
 }
