@@ -202,24 +202,43 @@ namespace BrewLab.Services.Implementations
 
                 experiment.CoffeeId = request.CoffeeId;
                 experiment.BrewMethodId = request.BrewMethodId;
-                await _experimentRepository.RemoveParametersAsync(experiment.Id);
-                experiment.Parameters.Clear();
 
-                if (request.Parameters != null && request.Parameters.Any())
+                // Reconcile parameters against the TRACKED collection — let EF derive
+                // insert / update / delete. Do NOT clear-and-re-add, and do NOT set Ids.
+                var incoming = request.Parameters ?? new List<ExperimentParameterRequestModel>();
+                var incomingIds = incoming.Select(p => p.BrewParameterId).ToHashSet();
+
+                // Remove rows that are no longer present  -> EF marks them Deleted
+                foreach (var gone in experiment.Parameters
+                             .Where(p => !incomingIds.Contains(p.BrewParameterId))
+                             .ToList())
                 {
-                    foreach (var parameter in request.Parameters)
+                    experiment.Parameters.Remove(gone);
+                }
+
+                // Upsert the incoming ones
+                foreach (var p in incoming)
+                {
+                    var existing = experiment.Parameters
+                        .FirstOrDefault(x => x.BrewParameterId == p.BrewParameterId);
+
+                    if (existing is not null)
+                    {
+                        existing.Value = p.Value;                 // tracked -> UPDATE
+                    }
+                    else
                     {
                         experiment.Parameters.Add(new ExperimentParameter
                         {
-                            Id = Guid.NewGuid(),
-                            ExperimentId = experiment.Id,
-                            BrewParameterId = parameter.BrewParameterId,
-                            Value = parameter.Value
+                            // No Id, no ExperimentId — EF sets them since it's an Added child
+                            BrewParameterId = p.BrewParameterId,
+                            Value = p.Value
                         });
                     }
                 }
 
-                await _experimentRepository.UpdateAsync(experiment);
+                // The entity is already tracked, so just persist.
+                await _experimentRepository.SaveChangesAsync();
 
                 return MapToResponseModel(experiment);
             }
