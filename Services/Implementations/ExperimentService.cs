@@ -263,9 +263,6 @@ namespace BrewLab.Services.Implementations
                     .Select(parameter => new ExperimentParameterResponseModel
                     {
                         BrewParameterId = parameter.BrewParameterId,
-                        Label = parameter.BrewParameter.Label,
-                        DataType = parameter.BrewParameter.DataType,
-                        Unit = parameter.BrewParameter.Unit,
                         Value = parameter.Value
                     })
                     .ToList()
