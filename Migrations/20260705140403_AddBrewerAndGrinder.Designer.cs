@@ -3,6 +3,7 @@ using System;
 using BrewLab.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace BrewLab.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260705140403_AddBrewerAndGrinder")]
+    partial class AddBrewerAndGrinder
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -187,7 +190,7 @@ namespace BrewLab.Migrations
                     b.Property<Guid?>("GrinderId")
                         .HasColumnType("uuid");
 
-                    b.Property<int?>("Overall")
+                    b.Property<int>("Overall")
                         .HasColumnType("integer");
 
                     b.Property<string>("Remark")

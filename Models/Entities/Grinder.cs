@@ -1,14 +1,14 @@
 ﻿namespace BrewLab.Models.Entities
 {
-    public class BrewMethod
+    public class Grinder
     {
         public Guid Id { get; set; }
+
         public string Name { get; set; } = string.Empty;
 
-        public ICollection<BrewParameter> BrewParameters { get; set; } = [];
+        public Guid UserId { get; set; }
+        public User User { get; set; } = null!;
 
         public ICollection<Experiment> Experiments { get; set; } = [];
-
-        public ICollection<Brewer> Brewers { get; set; } = [];
     }
 }

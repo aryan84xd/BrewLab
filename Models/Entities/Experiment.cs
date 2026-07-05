@@ -22,7 +22,7 @@ namespace BrewLab.Models.Entities
         public int? Bitterness { get; set; }
         public int? Aftertaste { get; set; }
         public ExtractionType? Extraction { get; set; }
-        public int Overall { get; set; }
+        public int? Overall { get; set; }
         public Guid CoffeeId { get; set; }
         public Guid BrewMethodId { get; set; }
         public Guid UserId { get; set; }
@@ -32,6 +32,13 @@ namespace BrewLab.Models.Entities
         public BrewMethod BrewMethod { get; set; } = null!;
 
         public User User { get; set; } = null!;
+
+
+        public Guid? GrinderId { get; set; }
+        public Grinder? Grinder { get; set; }
+
+        public Guid? BrewerId { get; set; }
+        public Brewer? Brewer { get; set; }
 
         public ICollection<ExperimentParameter> Parameters { get; set; } = [];
 

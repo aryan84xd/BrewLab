@@ -12,5 +12,8 @@
         // Navigation
         public ICollection<Coffee> Coffees { get; set; } = [];
         public ICollection<Experiment> Experiments { get; set; } = [];
+
+        public ICollection<Brewer> Brewers { get; set; } = [];
+        public ICollection<Grinder> Grinders { get; set; } = [];
     }
 }

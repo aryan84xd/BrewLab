@@ -33,6 +33,8 @@ namespace BrewLab.Repositories.Implementations
                 return null;
 
             return await _context.Experiments
+                .Include(e => e.Brewer)
+                .Include(e => e.Grinder)
                 .Include(e => e.BrewMethod)
                 .Include(e => e.Parameters)
                     .ThenInclude(p => p.BrewParameter)

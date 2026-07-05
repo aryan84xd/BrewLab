@@ -43,9 +43,13 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 // Register Coffee Services
 builder.Services.AddScoped<ICoffeeRepository, CoffeeRepository>();
 builder.Services.AddScoped<ICoffeeService, CoffeeService>();
+builder.Services.AddScoped<IGrinderService, GrinderService>();
+builder.Services.AddScoped<IBrewerService, BrewerService>();
 //Register Experiment Services
 builder.Services.AddScoped<IExperimentRepository, ExperimentRepository>();
 builder.Services.AddScoped<IExperimentService, ExperimentService>();
+builder.Services.AddScoped<IGrinderRepository, GrinderRepository>();
+builder.Services.AddScoped<IBrewerRepository, BrewerRepository>();
 
 builder.Services.AddCors(options =>
 {

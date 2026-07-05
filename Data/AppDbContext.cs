@@ -12,7 +12,8 @@ namespace BrewLab.Data
         public DbSet<BrewMethod> BrewMethods => Set<BrewMethod>();
         public DbSet<BrewParameter> BrewParameters => Set<BrewParameter>();
         public DbSet<ExperimentParameter> ExperimentParameters => Set<ExperimentParameter>();
-
+        public DbSet<Brewer> Brewers => Set<Brewer>();
+        public DbSet<Grinder> Grinders => Set<Grinder>();
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -60,6 +61,31 @@ namespace BrewLab.Data
                 .HasOne(ep => ep.BrewParameter)
                 .WithMany(bp => bp.ExperimentParameters)
                 .HasForeignKey(ep => ep.BrewParameterId);
+
+            modelBuilder.Entity<Experiment>()
+                .HasOne(e => e.Brewer)
+                .WithMany(b => b.Experiments)
+                .HasForeignKey(e => e.BrewerId);
+
+            modelBuilder.Entity<Experiment>()
+                .HasOne(e => e.Grinder)
+                .WithMany(g => g.Experiments)
+                .HasForeignKey(e => e.GrinderId);
+
+            modelBuilder.Entity<Brewer>()
+                .HasOne(b => b.User)
+                .WithMany(u => u.Brewers)
+                .HasForeignKey(b => b.UserId);
+
+            modelBuilder.Entity<Brewer>()
+                .HasOne(b => b.BrewMethod)
+                .WithMany(m => m.Brewers)
+                .HasForeignKey(b => b.BrewMethodId);
+
+            modelBuilder.Entity<Grinder>()
+                .HasOne(g => g.User)
+                .WithMany(u => u.Grinders)
+                .HasForeignKey(g => g.UserId);
         }
     }
 }

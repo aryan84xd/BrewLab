@@ -114,7 +114,10 @@ namespace BrewLab.Services.Implementations
 
                     CoffeeId = request.CoffeeId,
                     BrewMethodId = request.BrewMethodId,
-                    UserId = userId
+                    UserId = userId,
+
+                    BrewerId = request.BrewerId,
+                    GrinderId = request.GrinderId,
                 };
 
                 if (request.Parameters != null && request.Parameters.Any())
@@ -203,6 +206,9 @@ namespace BrewLab.Services.Implementations
                 experiment.CoffeeId = request.CoffeeId;
                 experiment.BrewMethodId = request.BrewMethodId;
 
+                experiment.BrewerId = request.BrewerId;
+                experiment.GrinderId = request.GrinderId;
+
                 // Reconcile parameters against the TRACKED collection — let EF derive
                 // insert / update / delete. Do NOT clear-and-re-add, and do NOT set Ids.
                 var incoming = request.Parameters ?? new List<ExperimentParameterRequestModel>();
@@ -277,6 +283,12 @@ namespace BrewLab.Services.Implementations
 
                 CoffeeId = experiment.CoffeeId,
                 BrewMethodId = experiment.BrewMethodId,
+
+                BrewerId = experiment.BrewerId,
+                BrewerName = experiment.Brewer?.Name,
+
+                GrinderId = experiment.GrinderId,
+                GrinderName = experiment.Grinder?.Name,
 
                 Parameters = experiment.Parameters
                     .Select(parameter => new ExperimentParameterResponseModel

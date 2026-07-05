@@ -22,10 +22,16 @@ namespace BrewLab.Models.ResponseModels
         public int? Aftertaste { get; set; }
 
         public ExtractionType? Extraction { get; set; }
-        public int Overall { get; set; }
+        public int? Overall { get; set; }
 
         public Guid CoffeeId { get; set; }
         public Guid BrewMethodId { get; set; }
+
+        public Guid? BrewerId { get; set; }
+        public string? BrewerName { get; set; }
+
+        public Guid? GrinderId { get; set; }
+        public string? GrinderName { get; set; }
 
         public List<ExperimentParameterResponseModel> Parameters { get; set; } = [];
     }
