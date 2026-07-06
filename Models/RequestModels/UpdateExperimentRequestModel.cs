@@ -8,7 +8,7 @@ namespace BrewLab.Models.RequestModels
         public decimal WaterWeight { get; set; }
         public decimal? WaterTemperature { get; set; }
         public string? GrindSetting { get; set; }
-        public int BrewTime { get; set; }
+        public int? BrewTime { get; set; }
         public string? Remark { get; set; }
 
         public int? Aroma { get; set; }
@@ -27,7 +27,7 @@ namespace BrewLab.Models.RequestModels
         public Guid? BrewerId { get; set; }
 
         public Guid? GrinderId { get; set; }
-
+        public DateTime? BrewStartedAt { get; set; }
         public List<ExperimentParameterRequestModel> Parameters { get; set; } = [];
     }
 }

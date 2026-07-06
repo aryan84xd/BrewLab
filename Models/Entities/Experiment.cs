@@ -13,7 +13,7 @@ namespace BrewLab.Models.Entities
         public decimal WaterWeight { get; set; }
         public decimal? WaterTemperature { get; set; }
         public string? GrindSetting { get; set; }
-        public int BrewTime { get; set; }
+        public int? BrewTime { get; set; }
         public string? Remark { get; set; }
         public int? Aroma { get; set; }
         public int? Acidity { get; set; }
@@ -39,6 +39,8 @@ namespace BrewLab.Models.Entities
 
         public Guid? BrewerId { get; set; }
         public Brewer? Brewer { get; set; }
+
+        public DateTime? BrewStartedAt { get; set; }
 
         public ICollection<ExperimentParameter> Parameters { get; set; } = [];
 
