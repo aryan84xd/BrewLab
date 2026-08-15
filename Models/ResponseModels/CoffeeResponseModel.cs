@@ -14,5 +14,6 @@ namespace BrewLab.Models.ResponseModels
         public string? TastingNotes { get; set; }
         public DateTime? RoastDate { get; set; }
         public ProcessType? Process { get; set; }
+        public decimal? Rating { get; set; }
     }
 }

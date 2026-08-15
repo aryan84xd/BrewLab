@@ -91,6 +91,7 @@ namespace BrewLab.Services.Implementations
                     TastingNotes = request.TastingNotes,
                     RoastDate = request.RoastDate,
                     Process = request.Process,
+                    Rating = request.Rating,
                     UserId = userId,
                     CreatedAt = DateTime.UtcNow
                 };
@@ -159,6 +160,7 @@ namespace BrewLab.Services.Implementations
                 coffee.TastingNotes = request.TastingNotes;
                 coffee.RoastDate = request.RoastDate;
                 coffee.Process = request.Process;
+                coffee.Rating = request.Rating;
 
                 // Update in database
                 await _coffeeRepository.UpdateAsync(coffee);
@@ -184,7 +186,8 @@ namespace BrewLab.Services.Implementations
                 Origin = coffee.Origin,
                 TastingNotes = coffee.TastingNotes,
                 RoastDate = coffee.RoastDate,
-                Process = coffee.Process
+                Process = coffee.Process,
+                Rating = coffee.Rating
             };
         }
     }

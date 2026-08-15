@@ -14,6 +14,7 @@ namespace BrewLab.Models.Entities
         public string? TastingNotes { get; set; }
         public DateTime? RoastDate { get; set; }
         public ProcessType? Process { get; set; }
+        public decimal? Rating { get; set; }
         public Guid UserId { get; set; }
 
         public User User { get; set; } = null!;
